@@ -10,6 +10,7 @@ respKernelMaxThd = 0.2;
 
 F0 = Function.F0;
 RawTrace = Function.RawTrace;
+FaceMotionPC1 = Function.FaceMotionPC1;
 StimStart = Function.StimStart;
 
 stimType = size(StimStart,1);
@@ -28,8 +29,19 @@ for ii = 1:size(stimMat,2)
     varGroup{ii} = (ii-1)*tmpGroupSize + 1 : ii*tmpGroupSize;
 end
 
+motionPCNum = 2;
+varGroup{end+1} =  max(varGroup{end})+1: max(varGroup{end})+motionPCNum;
 
-X = stimMatSpline;
+% raise faceMotion PC to 1,2 power
+tmpFaceMotionPC = movmean(FaceMotionPC1,5);
+tmpFaceMotionPCPower = zeros(motionPCNum,size(tmpFaceMotionPC,2));
+
+tmpFaceMotionPCPower(1,:) = zscore(tmpFaceMotionPC(1,:));
+tmpFaceMotionPCPower(2,:) = zscore(tmpFaceMotionPC(1,:).^2);
+
+stimMatSpline = normalize(stimMatSpline,'range');
+X = cat(2,stimMatSpline, tmpFaceMotionPCPower');
+
 y = RawTrace / F0;
 y = y(:);
 [F_stat_real, GLMcoeff] = GLM_Normal(X,y,varGroup);
@@ -41,11 +53,11 @@ F_stat_Shuffle = GLMShuffle(X,y,varGroup,nShuffles,binSize_order,shuffle_order);
 % caluclate p value each stimulus, permutation test
 p_value = zeros(length(varGroup),1);
 for ii = 1:length(varGroup)
-    p_value(ii) = mean(F_stat_Shuffle(:,ii) >= F_stat_real(ii)); 
+    p_value(ii) = mean(F_stat_Shuffle(:,ii) >= F_stat_real(ii));
 end
 
 p_value(p_value==0) = 1/nShuffles;
-p_adj = p_value * stimType;
+p_adj = p_value * (stimType + 1);
 p_adj(p_adj>1) = 1;
 p_adj(respKernelMax<respKernelMaxThd) = 1;
 
