@@ -4,10 +4,11 @@ load('multimodal_data.mat');
 % Stability Selection Parameters
 num_features = length(allName);
 n_iterations = 1000;       % Number of subsampling iterations
-subsample_ratio = 0.8;    % Ratio of data to sample each time
+subsample_ratio = 0.5;    % Ratio of data to sample each time
 alpha = 0.5;              % LASSO (1.0), Elastic Net (0 < alpha < 1)
 feature_count = zeros(num_features, 1);
 feature_matrix = zeros(n_iterations, num_features);
+q_target = round(sqrt(num_features));
 
 parfor iter = 1:n_iterations
     iter
@@ -19,22 +20,15 @@ parfor iter = 1:n_iterations
     % Perform LASSO with CV to choose lambda
     [B, FitInfo] = lassoglm(X_sub, Y_sub, 'binomial', ...
         'Alpha', alpha,...
-        'CV',5,...
+        'NumLambda', 100,...
         'MaxIter', 1000, ...
         'RelTol', 2e-3, ...
         'Standardize', true);
 
-    % Select features with minimal deviance
-    if isfield(FitInfo,'IndexMinDeviance')
-        idxMin = FitInfo.IndexMinDeviance;
-
-        selected = B(:, idxMin) ~= 0;
-
-        % Count selected features
-        feature_count = feature_count + selected;
-        feature_matrix(iter,:) = selected;
-        % pause;
-    end
+    [~, idx_best_q] = min(abs(FitInfo.DF - q_target));
+    selected = B(:, idx_best_q) ~= 0;
+    feature_count = feature_count + selected;
+    feature_matrix(iter,:) = selected;
 end
 
 % Normalize to get selection frequency (0 to 1)
@@ -144,11 +138,6 @@ figure(18); clf
 b = bar(sorted_freq, 'FaceColor','flat', 'EdgeColor','none', 'BarWidth',0.6);
 b.CData = bar_colors;
 b.Annotation.LegendInformation.IconDisplayStyle = 'off';
-
-% sorted_names{4} = 'A-MeanBranchLength';
-% sorted_names{5} = 'S-FuncAxis';
-% sorted_names{8} = 'D-GlobalHeight';
-
 
 % ----- Mapping rule for simplified labels -----
 yline(Thd , '--', 'LineWidth', 2,'Color',[0.2 0.2 0.2]);
