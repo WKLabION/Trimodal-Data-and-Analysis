@@ -406,16 +406,7 @@ end
 Xz = (X_raw - mu) ./ sd;
 Xz(~M_raw) = 0;                        % masked entries → exactly mean (0 in z-space)
 
-% QC matrix
-I_projAxon = double(~mask_axon);              
-I_basal    = double(~mask_basal);              
-I_apical   = double(~mask_apical);            
-I_group = [I_projAxon, I_basal, I_apical];
-group_names = {'ProjAxon_QC','Basal_QC','Apical_QC'};
-
-X = [Xz, I_group];                             
-allName = [allName, group_names];
-
+X = Xz;                             
 
 
 % ----- Build Y -----
