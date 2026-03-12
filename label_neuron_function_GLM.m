@@ -59,8 +59,6 @@ end
 p_value(p_value==0) = 1/nShuffles;
 p_adj = p_value * (stimType + 1);
 p_adj(p_adj>1) = 1;
-p_adj(respKernelMax<respKernelMaxThd) = 1;
-
 
 function respKernelMax = respKernel(X,GLMcoeff,spline_basis,stimType)
 tmpGLMcoeff = GLMcoeff(2:end);
