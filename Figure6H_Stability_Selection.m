@@ -1,7 +1,7 @@
 clear; close all;
 load('multimodal_data.mat');
 
-% Stability Selection Parameters
+%% Stability Selection Parameters
 num_features = length(allName);
 n_iterations = 1000;       % Number of subsampling iterations
 subsample_ratio = 0.5;    % Ratio of data to sample each time
@@ -11,7 +11,7 @@ feature_matrix = zeros(n_iterations, num_features);
 q_target = round(sqrt(num_features));
 
 parfor iter = 1:n_iterations
-    iter
+    % iter
     % Subsampling
     idx = randperm(length(Y), round(subsample_ratio * length(Y)));
     X_sub = X(idx, :);

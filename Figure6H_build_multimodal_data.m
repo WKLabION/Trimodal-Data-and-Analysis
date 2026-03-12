@@ -232,48 +232,48 @@ signed_dists = computeLDADistanceXZ(allSomaInfoBimodal(validIdx,:), funcLabelBim
 
 signed_distsFlt = signed_dists(ismember(tmpBimodalIdx, trimodalIdx));
 
-% % Visualize
-% meanPoint = mean(XZ, 1);
-% pt1 = meanPoint - [-w(2), w(1)];
-% pt2 = meanPoint + [-w(2), w(1)];
-% 
-% grayColor = [0.5 0.5 0.5];
-% blueColor = [11, 97, 216]/255;
-% 
-% figure('Color', 'w'); clf;
-% hold on;
-% 
-% % ---- Draw confidence ellipses ----
-% draw_group_ellipse(XZ(labels==0, :), grayColor, 0.25);
-% draw_group_ellipse(XZ(labels==1, :), blueColor, 0.25);
-% 
-% % ---- Plot scatter points ----
-% scatter(XZ(labels==0,1), XZ(labels==0,2), 60, grayColor, 'filled', ...
-%     'MarkerEdgeColor', 'none');
-% scatter(XZ(labels==1,1), XZ(labels==1,2), 60, blueColor, 'filled', ...
-%     'MarkerEdgeColor', 'none');
-% 
-% % ---- LDA axis ----
-% plot([pt1(1), pt2(1)], [pt1(2), pt2(2)], 'k--', 'LineWidth', 3);
-% 
-% xlabel('Medial–Lateral (mm)', 'FontSize', 12);
-% ylabel('Anterior–Posterior (mm)', 'FontSize', 12);
-% set(gca, 'YDir', 'reverse', 'FontSize', 11);
-% box off;
-% 
-% xlim([1.2,3.2]);
-% xticks(1.2:0.4:3.2);
-% yticks(7:0.5:10);
-% 
-% ax = gca;
-% ax.LineWidth = 3;
-% ax.Box = 'off';
-% ax.TickDir = 'out';
-% ax.FontSize = 22;
-% ax.XColor = 'k';
-% ax.YColor = 'k';
-% 
-% set(gcf, 'Position', [680   426   605   579]);
+% Visualize
+meanPoint = mean(XZ, 1);
+pt1 = meanPoint - [-w(2), w(1)];
+pt2 = meanPoint + [-w(2), w(1)];
+
+grayColor = [0.5 0.5 0.5];
+blueColor = [11, 97, 216]/255;
+
+figure('Color', 'w'); clf;
+hold on;
+
+% ---- Draw confidence ellipses ----
+draw_group_ellipse(XZ(labels==0, :), grayColor, 0.25);
+draw_group_ellipse(XZ(labels==1, :), blueColor, 0.25);
+
+% ---- Plot scatter points ----
+scatter(XZ(labels==0,1), XZ(labels==0,2), 60, grayColor, 'filled', ...
+    'MarkerEdgeColor', 'none');
+scatter(XZ(labels==1,1), XZ(labels==1,2), 60, blueColor, 'filled', ...
+    'MarkerEdgeColor', 'none');
+
+% ---- LDA axis ----
+plot([pt1(1), pt2(1)], [pt1(2), pt2(2)], 'k--', 'LineWidth', 3);
+
+xlabel('Medial–Lateral (mm)', 'FontSize', 12);
+ylabel('Anterior–Posterior (mm)', 'FontSize', 12);
+set(gca, 'YDir', 'reverse', 'FontSize', 11);
+box off;
+
+xlim([1.2,3.2]);
+xticks(1.2:0.4:3.2);
+yticks(7:0.5:10);
+
+ax = gca;
+ax.LineWidth = 3;
+ax.Box = 'off';
+ax.TickDir = 'out';
+ax.FontSize = 22;
+ax.XColor = 'k';
+ax.YColor = 'k';
+
+set(gcf, 'Position', [680   426   605   579]);
 
 %% filter less projecting brain region
 tmpThd = 20;
@@ -347,8 +347,14 @@ X4_ax_ = axonData(keep_rows,:);
 X5_de_ = dendriteData(keep_rows,:);      
 
 % RNA localization
-X6_ = allRNAlocFlt;
-X6_ = X6_(keep_rows,:);
+% PCA
+[coeff_rna, score_rna, latent_rna, ~, explained_rna] = pca(allRNAlocFlt, 'Rows','complete');
+
+K = 30;                         
+X6_pc = score_rna(:, 1:K);
+RNAlocName_pc = arrayfun(@(k) sprintf('subRNA-PC%d', k), 1:K, 'uni', false);
+X6_ = X6_pc(keep_rows,:);
+
 
 % QC (basal, apical, axon)
 QC_ = allQCFlt(keep_rows,:);                  % [:,1]=basal, [:,2]=apical, [:,3]=axon
@@ -380,14 +386,14 @@ M5de(:, idx_apical) = repmat(mask_apical,             1, numel(idx_apical));
 M5de(:, idx_basal ) = repmat(mask_basal ,             1, numel(idx_basal));
 
 % RNAloc → treat NaN as bad (per-cell, per-gene)
-M6 = true(N_keep,length(RNAlocName));
+M6 = true(N_keep,length(RNAlocName_pc));
 
 % ----- Concatenate blocks & masks (column-aligned) -----
 X_raw = [X1_,  X2_,  X3_,  X4_ax_,  X5_de_,  X6_];
 M_raw = [M1 ,  M2 ,  M3 ,  M4ax ,   M5de ,   M6 ];
 
 allName = [brainRegionFlt', geneNameFlt, somaInfoNameFlt, ...
-    axonParams, dendriteParams, RNAlocName'];
+    axonParams, dendriteParams, RNAlocName_pc];
 
 % ----- No-leak standardization (μ/σ from good cells only), then zero bad -----
 P = size(X_raw,2);
