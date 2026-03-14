@@ -34,7 +34,6 @@ end
 % Normalize to get selection frequency (0 to 1)
 feature_freq = feature_count / n_iterations;
 %% Visualize or export the result
-% load('stability_selection_checkboard_dom.mat');
 Thd = 0.6;
 % Step 1: Filter out features with selection frequency > 0.1
 nonzero_idx = feature_freq > 0.2;

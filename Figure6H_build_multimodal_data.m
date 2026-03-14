@@ -348,7 +348,8 @@ X5_de_ = dendriteData(keep_rows,:);
 
 % RNA localization
 % PCA
-[coeff_rna, score_rna, latent_rna, ~, explained_rna] = pca(allRNAlocFlt, 'Rows','complete');
+X6_full = zscore(allRNAlocFlt);
+[coeff_rna, score_rna, latent_rna, ~, explained_rna] = pca(X6_full, 'Rows','complete');
 
 K = 30;                         
 X6_pc = score_rna(:, 1:K);
