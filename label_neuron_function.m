@@ -1,6 +1,6 @@
 clear; close all;
 
-filePath = 'trimodal_data\220_26.mat';
+filePath = 'trimodal_data\192_6.mat';
 load(filePath);
 
 stimDuration = 2; % sec
